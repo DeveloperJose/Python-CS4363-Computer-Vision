@@ -1,0 +1,75 @@
+# -*- coding: utf-8 -*-
+"""
+Course: CS 4365/5354 [Computer Vision]
+Author: Jose Perez [ID: 80473954]
+Assignment: Lab 2
+Instructor: Olac Fuentes
+"""
+from timeit import default_timer as timer
+import numpy as np
+from scipy import signal
+# ========================= Constants =========================
+
+# Matrix used for convolution of the HOGs
+convolution_matrix = np.array([[-1, 0, 1]]) 
+
+def integral_sums_image(im, region, number_of_bars=12):
+    # Initialize using the first color channel
+    imx = np.zeros(im[:,:,0].shape)
+    imx = signal.convolve(im[:,:,0], convolution_matrix, mode='same')
+        
+    imy = np.zeros(im[:,:,0].shape)
+    imy = signal.convolve(im[:,:,0], np.transpose(convolution_matrix), mode='same')
+    
+    magnitude = np.sqrt(imx**2+imy**2)
+    direction = (np.arctan2(imy, imx) * 180 / np.pi) + 180 # From 0 to 360    
+    
+    # Go through the other color channels
+    # Get the maximum magnitude for each
+    for i in range(1, 3):    
+        imx = np.zeros(im[:,:,i].shape)
+        imx = signal.convolve(im[:,:,i], convolution_matrix, mode='same')
+        
+        imy = np.zeros(im[:,:,i].shape)
+        imy = signal.convolve(im[:,:,i], np.transpose(convolution_matrix), mode='same')
+           
+        curr_magnitude = np.sqrt(imx**2+imy**2)
+        curr_direction = (np.arctan2(imy, imx) * 180 / np.pi) + 180 # From 0 to 360
+        
+        magnitude = np.maximum(magnitude, curr_magnitude)
+        direction = np.maximum(direction, curr_direction)
+    
+    #print "[Integral HOG] Finished getting magnitude and direction"
+    
+    start_time = timer()
+    angle_step = 360 / number_of_bars
+    angle_range = xrange(0, 360, angle_step)
+    
+    (w, h) = region.shape[:2]
+    (row, column) = im.shape[:2]
+    row += 1
+    column += 1
+    integral_sums = np.zeros((12, row-h, column-w ), dtype=np.float64) 
+    
+    i = 0
+    #print "[Integral HOG] Starting calculation of sums"
+    for angle in angle_range:
+        integral = magnitude.copy().astype(np.float64)
+        # Set the magnitude for all other angles to 0
+        integral[np.logical_or(direction<angle, direction>=angle+30)] = 0
+        integral = integral.cumsum(1).cumsum(0)
+        integral = np.pad(integral, (1, 0), 'constant', constant_values=(0))
+        
+        A = integral[0:row-h, 0:column-w]
+        B = integral[0:row-h, w:column]
+        C = integral[h:row, 0:column-w]
+        D = integral[h:, w:]
+        
+        #pdb.set_trace()
+        integral_sums[i] = A + D - B - C
+        i = i + 1
+        
+    end_time = timer()    
+    print('[Integral HOG] Duration: ' + str(end_time - start_time)) 
+
+    return integral_sums

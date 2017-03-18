@@ -1,0 +1,9 @@
+Dataset, Algorithm, Feature, Running Time, Accuracy
+CIFAR-10, 512 neuron CNN, HOG, 38 min, 54.176\%
+CIFAR-10, MLP2, HOG, 38.291s, 51.808\%
+CIFAR-10, MLP, HOG, 13.470s, 50.16\% 
+MNIST, 5000 neuron MLP2, Pixel Int., 19 min, 97.87\%
+MNIST, 8000 neuron MLP2, Pixel Int., 29 min, 97.78\%
+MNIST, MLP, Daisy, 13 min, 96.9\%
+MNIST, 9-poly SVM, Pixel Int., 20 min, 96.57\%
+MNIST, Linear SVM, Pixel Int., 9 min, 90.89\% 
